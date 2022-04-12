@@ -53,14 +53,24 @@ drv <- dbDriver("PostgreSQL")
 con <- dbConnect(odbc::odbc(), database = "postgres",password = pw, Uid = "postgres",
                  .connection_string = "Driver={PostgreSQL Unicode};", timeout = 10)
 
-dbGetQuery(con, "SHOW CLIENT_ENCODING")
-
-df_postgres <- dbGetQuery(con, "SELECT * from transparency_portal", encoding = "UTF8")
 
 
 dbGetQuery(con, "SHOW CLIENT_ENCODING")
 
 
+#Função para transformar tudo em UTF8
+
+set_utf8 <- function(x) {
+  # Declare UTF-8 encoding on all character columns:
+  chr <- sapply(x, is.character)
+  x[, chr] <- lapply(x[, chr, drop = FALSE], `Encoding<-`, "UTF8")
+  # Same on column names:
+  Encoding(names(x)) <- "UTF8"
+  x
+}
+
+
+df_postgres<-set_utf8(dbGetQuery(con, "SELECT * FROM transparency_portal"))
 
 
 
@@ -91,24 +101,24 @@ Favorecidos_v2<- c("\\bGRAPHO-PRODUTOS E SERVICOS EM COMPUTACAO LTDA\\b",
 
 # Filtragem Fav V2 -----------------------------------------------------------
 
-queries_Favorecidos1 <- df %>% 
-  filter(str_detect(data_favorecido, paste(Favorecidos_v2, collapse = "|")))
+Favorecidos1 <- df_postgres %>% 
+  filter(str_detect(favorecido, paste(Favorecidos_v2, collapse = "|")))
 
 
-queries_Favorecidos3 <- df3 %>% 
-  filter(str_detect(Favorecido, paste(Favorecidos_v2, collapse = "|")))
+# queries_Favorecidos3 <- df3 %>% 
+#   filter(str_detect(Favorecido, paste(Favorecidos_v2, collapse = "|")))
+# 
+# queries_Favorecidos4 <- df4 %>% 
+#   filter(str_detect(Favorecido, paste(Favorecidos_v2, collapse = "|")))
 
-queries_Favorecidos4 <- df4 %>% 
-  filter(str_detect(Favorecido, paste(Favorecidos_v2, collapse = "|")))
-
-x<-colnames(queries_Favorecidos1)
+x<-colnames(Favorecidos1)
 
 
-names(queries_Favorecidos3)<- c(x)
-names(queries_Favorecidos4)<- c(x)
-colnames(queries_Favorecidos1)
-colnames(queries_Favorecidos3)
-colnames(queries_Favorecidos4)
+# names(queries_Favorecidos3)<- c(x)
+# names(queries_Favorecidos4)<- c(x)
+# colnames(queries_Favorecidos1)
+# colnames(queries_Favorecidos3)
+# colnames(queries_Favorecidos4)
 
 
 # Filtros V2 --------------------------------------------------------------
@@ -116,25 +126,25 @@ colnames(queries_Favorecidos4)
 
 Negar<- c("SAAS","MICROSOFT","TELEFONICA","ANULACAO","\\bADOBE\\b","SISTEMA OPERACIONAL WINDOWS", "WIN SERVER")
 
-queries_Favorecidos1<-queries_Favorecidos1 %>% 
-  filter(str_detect(data_detalhamento_item,paste(Negar, collapse = "|"), negate = TRUE))
+Favorecidos1<-Favorecidos1 %>% 
+  filter(str_detect(detalhamento_item,paste(Negar, collapse = "|"), negate = TRUE))
 
-queries_Favorecidos1<-queries_Favorecidos1 %>% 
-  filter(str_detect(data_observacao,paste(Negar, collapse = "|"), negate = TRUE))
-
-queries_Favorecidos3<-queries_Favorecidos3 %>% 
-  filter(str_detect(detalhamento.item,paste(Negar, collapse = "|"), negate = TRUE))
-
-queries_Favorecidos3<-queries_Favorecidos3 %>% 
+Favorecidos1<-Favorecidos1 %>% 
   filter(str_detect(observacao,paste(Negar, collapse = "|"), negate = TRUE))
-
-queries_Favorecidos4<-queries_Favorecidos4 %>% 
-  filter(str_detect(detalhamento.item,paste(Negar, collapse = "|"), negate = TRUE))
-
-queries_Favorecidos4<-queries_Favorecidos4 %>% 
-  filter(str_detect(observacao,paste(Negar, collapse = "|"), negate = TRUE))
-
-final<- rbind(queries_Favorecidos1,queries_Favorecidos3, queries_Favorecidos4)
+# 
+# queries_Favorecidos3<-queries_Favorecidos3 %>% 
+#   filter(str_detect(detalhamento.item,paste(Negar, collapse = "|"), negate = TRUE))
+# 
+# queries_Favorecidos3<-queries_Favorecidos3 %>% 
+#   filter(str_detect(observacao,paste(Negar, collapse = "|"), negate = TRUE))
+# 
+# queries_Favorecidos4<-queries_Favorecidos4 %>% 
+#   filter(str_detect(detalhamento.item,paste(Negar, collapse = "|"), negate = TRUE))
+# 
+# queries_Favorecidos4<-queries_Favorecidos4 %>% 
+#   filter(str_detect(observacao,paste(Negar, collapse = "|"), negate = TRUE))
+# 
+# final<- rbind(Favorecidos1,queries_Favorecidos3, queries_Favorecidos4)
 
 # Fav_cancel<- c('42.422.253/0001-01 - EMPRESA DE TECNOLOGIA E INFORMACOES DA PREVIDENCIA - DATAPREV S.A.', 
 #                '58.069.360/0010-10 - STEFANINI CONSULTORIA E ASSESSORIA EM INFORMATICA S.A.',
@@ -156,7 +166,7 @@ final<- rbind(queries_Favorecidos1,queries_Favorecidos3, queries_Favorecidos4)
 
 
 
-write_xlsx(x = final, path = '../AltoQI/final_cod40.xlsx', col_names = TRUE)
+write_xlsx(x = Favorecidos1, path = 'final.xlsx', col_names = TRUE)
 
 
 
@@ -173,8 +183,8 @@ write_xlsx(x = final, path = '../AltoQI/final_cod40.xlsx', col_names = TRUE)
 
 # Filtrando por Aquisição de software pronto ------------------------------
 
-Software_pronto<-df %>% 
-  filter(str_detect(detalhamento.subelement, '05 - AQUISICAO DE SOFTWARE PRONTO'))
+# Software_pronto<-df %>% 
+  # filter(str_detect(detalhamento.subelement, '05 - AQUISICAO DE SOFTWARE PRONTO'))
 
 # Tirar windows, wifi, seguros, microsoft ... 
 softwares_cancel <-c('WINDOWS','CAPACITAÇÃO ', 'SEGURO', 'MICROSOFT', 'SOFTWARE DE GERENCIAMENTO DE BACKUP', 
