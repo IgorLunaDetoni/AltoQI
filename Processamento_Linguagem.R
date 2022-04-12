@@ -12,15 +12,54 @@ library(writexl)
 library(DBI)
 library(odbc)
 library(RPostgresSQL)
+library(RODBC)
+
 
 # carregando csv ----------------------------------------------------------
 setwd('C:\\Users/Pichau/Desktop/Processamen_linguagem')
 
-df <-read.csv('Out_Dez_40.csv', encoding = 'UTF-8') #Dezembro
-df3 <-readxl::read_excel('output-40-out-e-Nov-22.xlsx') #outubro e novembro e janeiro
-df4 <- readxl::read_excel('portal transparencia FEV.xlsx')
+# df <-read.csv('Out_Dez_40.csv', encoding = 'UTF-8') #Dezembro
+# df3 <-readxl::read_excel('output-40-out-e-Nov-22.xlsx') #outubro e novembro e janeiro
+# df4 <- readxl::read_excel('portal transparencia FEV.xlsx')
+# 
+# df <- read_csv2('Agosto.csv')
+
+
 
 # Import PostGres -------------------------------------------------------------
+
+
+library(dbplyr)
+psql <- DBI::dbDriver("PostgreSQL")
+# con <- DBI::dbConnect(psql, 
+#                       dbname = "postgres",
+#                       host = "192.168.15.74", 
+#                       port = 5432,
+#                       user = "user", 
+#                       password = 'PELX8215')
+
+
+# create a connection
+# save the password that we can "hide" it as best as we can by collapsing it
+pw <- {
+  "PELX8215"
+}
+# loads the PostgreSQL driver
+drv <- dbDriver("PostgreSQL")
+# creates a connection to the postgres database
+# note that "con" will be used later in each connection to the database
+
+
+con <- dbConnect(odbc::odbc(), database = "postgres",password = pw, Uid = "postgres",
+                 .connection_string = "Driver={PostgreSQL Unicode};", timeout = 10)
+
+dbGetQuery(con, "SHOW CLIENT_ENCODING")
+
+df_postgres <- dbGetQuery(con, "SELECT * from transparency_portal", encoding = "UTF8")
+
+
+dbGetQuery(con, "SHOW CLIENT_ENCODING")
+
 
 
 
@@ -53,7 +92,7 @@ Favorecidos_v2<- c("\\bGRAPHO-PRODUTOS E SERVICOS EM COMPUTACAO LTDA\\b",
 # Filtragem Fav V2 -----------------------------------------------------------
 
 queries_Favorecidos1 <- df %>% 
-  filter(str_detect(Favorecido, paste(Favorecidos_v2, collapse = "|")))
+  filter(str_detect(data_favorecido, paste(Favorecidos_v2, collapse = "|")))
 
 
 queries_Favorecidos3 <- df3 %>% 
@@ -78,10 +117,10 @@ colnames(queries_Favorecidos4)
 Negar<- c("SAAS","MICROSOFT","TELEFONICA","ANULACAO","\\bADOBE\\b","SISTEMA OPERACIONAL WINDOWS", "WIN SERVER")
 
 queries_Favorecidos1<-queries_Favorecidos1 %>% 
-  filter(str_detect(detalhamento.item,paste(Negar, collapse = "|"), negate = TRUE))
+  filter(str_detect(data_detalhamento_item,paste(Negar, collapse = "|"), negate = TRUE))
 
 queries_Favorecidos1<-queries_Favorecidos1 %>% 
-  filter(str_detect(observacao,paste(Negar, collapse = "|"), negate = TRUE))
+  filter(str_detect(data_observacao,paste(Negar, collapse = "|"), negate = TRUE))
 
 queries_Favorecidos3<-queries_Favorecidos3 %>% 
   filter(str_detect(detalhamento.item,paste(Negar, collapse = "|"), negate = TRUE))
