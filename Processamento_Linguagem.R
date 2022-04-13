@@ -70,7 +70,7 @@ set_utf8 <- function(x) {
 }
 
 
-df_postgres<-set_utf8(dbGetQuery(con, "SELECT * FROM transparency_portal"))
+df_postgres<-set_utf8(dbGetQuery(con, "SELECT * FROM transparency_portal1"))
 
 
 
@@ -124,17 +124,42 @@ x<-colnames(Favorecidos1)
 # Filtros V2 --------------------------------------------------------------
 
 
-Negar<- c("SAAS","MICROSOFT","TELEFONICA","ANULACAO","\\bADOBE\\b","SISTEMA OPERACIONAL WINDOWS", "WIN SERVER")
+Negar<- c("SAAS","MICROSOFT","TELEFONICA","ANULACAO","\\bADOBE\\b","SISTEMA OPERACIONAL WINDOWS", "WIN SERVER",
+          "\\bCANCELAMENTO DE SALDO NAO UTILIZADO.\\b", "WINDOWS SERVER STD 2019 CORE OLP", "CALL WINDOWS SERVER 2019 OLP.
+", " WINDOWS SERVER STANDARD PER CORE 16 LICENSES SOFTWARE LICENSE.", "AZURE", "POWER BI",
+          "RENOVACAO LICENCA DE ANTIVIRUS KASPERSKY.", "CAMPUS POUSO ALEGRE IFSULDEMINAS",
+          "CANCELAMENTO DE SALDO NAO UTILIZADO.", "PROJECT ON-LINE ESSENTIALS",
+          "CONTRATO 01/2022 - DTI/PF - SUBSCRICAO - 3.323 UNIDADES DO ITEM 04 DO PREGAO 08/2021 - DTI/PF.",
+          "CONTRATO 01/2022 - DTI/PF - SUBSCRICAO - 4154 UNIDADES DO ITEM 04 DO PREGAO 08/2022 - DTI/PF.",
+          "CONTRATO 01/2022 - DTI/PF - SUBSCRICAO - 4985 UNIDADES DO ITEM 04 DO PREGAO 08/2022 - DTI/PF.",
+          "CONTRATO 01/2022 - DTI/PF - ITENS 01, 02, 03, 05, 06, 07, 08, 09 E 10 DO PREGAO 08/2021 - SUBSCRICOES E GARANTIA DE ATUALIZACAO.",
+          "DESPESA REF AO CT Nº 031/2020 BRASOFTWARE INFORMATICA LTDA - ITENS 1, 2, 3, 4, 5, 6, 8, 9, 10 PERIODO DE 23/12/2021 A 22/12/2022."
+          )
 
 Favorecidos1<-Favorecidos1 %>% 
   filter(str_detect(detalhamento_item,paste(Negar, collapse = "|"), negate = TRUE))
 
 Favorecidos1<-Favorecidos1 %>% 
   filter(str_detect(observacao,paste(Negar, collapse = "|"), negate = TRUE))
-# 
-# queries_Favorecidos3<-queries_Favorecidos3 %>% 
-#   filter(str_detect(detalhamento.item,paste(Negar, collapse = "|"), negate = TRUE))
-# 
+
+
+Fav_cancel<- c('42.422.253/0001-01 - EMPRESA DE TECNOLOGIA E INFORMACOES DA PREVIDENCIA - DATAPREV S.A.', 
+               '58.069.360/0010-10 - STEFANINI CONSULTORIA E ASSESSORIA EM INFORMATICA S.A.',
+               '40.432.544/0001-47 - CLARO S.A.','01.657.353/0001-21 - AMAZONAS COPIADORAS LTDA',
+               '33.000.118/0001-79 - TELEMAR NORTE LESTE S/A. - EM RECUPERACAO JUDICIAL',
+               '26.201.167/0001-04 - DIGITAL PAPER LTDA',
+               '01.765.213/0001-77 - COPYSYSTEMS-COPIADORAS SISTEMAS E SERVICOS LTDA',
+               '59.456.277/0004-19 - ORACLE DO BRASIL SISTEMAS LTDA')
+
+Favorecidos1<-Favorecidos1 %>% 
+   filter(str_detect(favorecido,paste(Fav_cancel, collapse = "|"), negate = TRUE))
+#
+
+TEST <- Favorecidos1 %>% select(favorecido, detalhamento_item, observacao) %>%  filter(str_detect(favorecido, "57.142.978/0001-05 - BRASOFTWARE INFORMATICA LTDA"))
+
+x<-TEST %>% count(detalhamento_item, observacao)
+
+
 # queries_Favorecidos3<-queries_Favorecidos3 %>% 
 #   filter(str_detect(observacao,paste(Negar, collapse = "|"), negate = TRUE))
 # 
@@ -165,44 +190,11 @@ Favorecidos1<-Favorecidos1 %>%
 # Favorecidos V2 extract --------------------------------------------------
 
 
-
-write_xlsx(x = Favorecidos1, path = 'final.xlsx', col_names = TRUE)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Filtrando por Aquisição de software pronto ------------------------------
-
-# Software_pronto<-df %>% 
-  # filter(str_detect(detalhamento.subelement, '05 - AQUISICAO DE SOFTWARE PRONTO'))
-
-# Tirar windows, wifi, seguros, microsoft ... 
-softwares_cancel <-c('WINDOWS','CAPACITAÇÃO ', 'SEGURO', 'MICROSOFT', 'SOFTWARE DE GERENCIAMENTO DE BACKUP', 
-                     'SWITCH','VELOCIDADE COMUNICAÇÃO 1.000 MBPS', 'ANTIVÍRUS', 'SAS', 'OFFICE','STATA', 
-                     'TELEFÔNICO','EVIEWS','TENABLE NETWORK','JAVA','CAMTASIA') 
-
-Fav_cancel<- c('42.422.253/0001-01 - EMPRESA DE TECNOLOGIA E INFORMACOES DA PREVIDENCIA - DATAPREV S.A.', 
-               '58.069.360/0010-10 - STEFANINI CONSULTORIA E ASSESSORIA EM INFORMATICA S.A.',
-               '40.432.544/0001-47 - CLARO S.A.','01.657.353/0001-21 - AMAZONAS COPIADORAS LTDA',
-               '33.000.118/0001-79 - TELEMAR NORTE LESTE S/A. - EM RECUPERACAO JUDICIAL',
-               '26.201.167/0001-04 - DIGITAL PAPER LTDA',
-               '01.765.213/0001-77 - COPYSYSTEMS-COPIADORAS SISTEMAS E SERVICOS LTDA',
-               '59.456.277/0004-19 - ORACLE DO BRASIL SISTEMAS LTDA',
-               '806030 - SERPRO - SEDE - BRASILIA',
-               '21.142.448/0001-10 - LENI S SILVA DE LUCENA',
-               '09.240.519/0001-11 - TARGETWARE INFORMATICA LTDA',
-               '27.778.168/0001-89 - K2 IT LTDA')
-Obs_cancel<- c('ANULACAO', 'MATLAB','ALTIUM', 'SAP POWER DESIGNER')
+#                '806030 - SERPRO - SEDE - BRASILIA',
+#                '21.142.448/0001-10 - LENI S SILVA DE LUCENA',
+#                '09.240.519/0001-11 - TARGETWARE INFORMATICA LTDA',
+#                '27.778.168/0001-89 - K2 IT LTDA')
+# Obs_cancel<- c('ANULACAO', 'MATLAB','ALTIUM', 'SAP POWER DESIGNER')
 
 
 
@@ -221,18 +213,18 @@ Obs_cancel<- c('ANULACAO', 'MATLAB','ALTIUM', 'SAP POWER DESIGNER')
 
 
 
+write_xlsx(x = Favorecidos1, path = '../AltoQI_BI/final.xlsx', col_names = TRUE)
 
+# Filtrando por Aquisição de software pronto ------------------------------
 
+# Software_pronto<-df %>% 
+  # filter(str_detect(detalhamento.subelement, '05 - AQUISICAO DE SOFTWARE PRONTO'))
 
+# Tirar windows, wifi, seguros, microsoft ... 
+softwares_cancel <-c('WINDOWS','CAPACITAÇÃO ', 'SEGURO', 'MICROSOFT', 'SOFTWARE DE GERENCIAMENTO DE BACKUP', 
+                     'SWITCH','VELOCIDADE COMUNICAÇÃO 1.000 MBPS', 'ANTIVÍRUS', 'SAS', 'OFFICE','STATA', 
+                     'TELEFÔNICO','EVIEWS','TENABLE NETWORK','JAVA','CAMTASIA') 
 
-
-# Export ------------------------------------------------------------------
-
-
-write_xlsx(x = queries_Favorecidos2, path = 'Querie_cod_40_nox_dez.xlsx', col_names = TRUE)
-
-
-write_xlsx(x = queries_Favorecidos, path = 'Querie_cod_40.xlsx', col_names = TRUE)
 
 
 
